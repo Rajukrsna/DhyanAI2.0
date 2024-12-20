@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | DhyanAI</title>
+  <link rel="stylesheet" href="/styles/main.css"> <!-- Your global CSS -->
+
+  <style>
+    body {
+      background: url('https://www.transparenttextures.com/patterns/black-linen.png'), linear-gradient(135deg, #eef2f3, #8e9eab);
+      font-family: 'Poppins', sans-serif;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start; /* Align items at the start to avoid navbar overlap */
+      padding: 100px 20px 20px; /* Add top padding to create space below the navbar */
+    }
+
+    .aws-logo {
+      width: 80px !important; /* Small size for the icon */
+      margin-left: 10px; /* Space between text and logo */
+      vertical-align: middle; /* Align vertically in the middle of the text */
+    }
+
+    .row {
+      display: flex;
+      gap: 40px;
+      max-width: 1200px;
+      width: 100%;
+    }
+
+   
+  </style>
+</head>
+
+<body>
+  <div class="row mb-4">
+    <div class="col-md-8">
+      <h1><img src="/public/logo2.png" class="aws-logo" alt="AWS Cognito Logo">Welcome to DhyanAI</h1>
+      <p>DhyanAI is an innovative platform designed to bring AI-powered solutions to human health and Well being. With seamless integration, personalized recommendations, and secure authentication via AWS Cognito, DhyanAI offers a simple yet powerful experience to manage your overall wellbeing- Physically and Mentally. Explore the potential of artificial intelligence in the most accessible way possible, while keeping your data safe and secure.</p>
+
+<br>
+      <!-- Login Form -->
+      <p class="aws-cognito-text">Sign in using AWS Cognito for secure and seamless authentication.</p>
+
+      <a href="/login" type="submit" class="btn btn-primary">Login</a>
+     
+    </div>
+    <div class="col-md-3">
+      <div class="content-section">
+        <img src="public/AI-HC.png" alt="App Image">
+        
+      </div>
+    </div>
+  </div>
+</body>
+</html>

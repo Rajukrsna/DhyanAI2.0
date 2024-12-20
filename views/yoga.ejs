@@ -1,0 +1,505 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+             background: url('https://www.transparenttextures.com/patterns/black-linen.png'), linear-gradient(135deg, #eef2f3, #8e9eab);
+             font-family: 'Poppins', sans-serif;
+             color: #333;
+             min-height: 100vh;
+             display: flex;
+             justify-content: center;
+             align-items: center;
+             padding: 20px;
+         }
+ 
+     h1 {
+       display: flex;
+       align-items: center;
+       font-size: 2rem;
+       margin-bottom: 1.5rem;
+       color: #444;
+     }
+ 
+     h1 i {
+       margin-right: 10px;
+       color: #007bff;
+     }
+ 
+     .section-divider {
+       border-top: 3px dashed #007bff;
+       margin: 50px 0;
+       position: relative;
+     }
+ 
+     .section-divider::before {
+       content: '';
+       width: 10px;
+       height: 10px;
+       background-color: #007bff;
+       border-radius: 50%;
+       position: absolute;
+       top: -6px;
+       left: 0;
+     }
+ 
+     .section-divider::after {
+       content: '';
+       width: 10px;
+       height: 10px;
+       background-color: #007bff;
+       border-radius: 50%;
+       position: absolute;
+       top: -6px;
+       right: 0;
+     }
+ 
+     .card {
+       border-radius: 10px;
+       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+     }
+   
+ </style>
+</head>
+
+<body>
+  
+<div class="container mt-5 yoga-page">
+  <h1><i class="fa-solid fa-person"></i>Get Your Yogasanas</h1>
+  <div class="row">
+
+    <!-- Problem Entry Form Card -->
+    <div class="col-md-4 mb-4">
+      <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">Health Problem Entry</h4>
+        </div>
+        <div class="card-body">
+          <form id="problemForm" action="/yogas" method="POST">
+            <div class="form-group mb-4">
+              <label for="problemInput" class="form-label fs-5">Enter Your Health Problem</label>
+              <input type="text" name="healthIssue" class="form-control fs-5 p-3" id="problemInput" placeholder="e.g., Knee pain, Back pain" required>
+            </div>
+            <button type="submit" class="btn btn-primary">
+              <i class="fa-solid fa-images me-2"></i> Give Yoga Asanas
+            </button>
+          </form>
+          
+         
+          
+          <div class="text-center mt-auto">
+            
+            <p class="fs-6 text-muted">Explore various yoga poses </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <div class="col-md-8">
+      <div class="card shadow-lg border text-center d-flex align-items-center justify-content-center" style="max-height: 400px; overflow-y: auto;">
+        <div class="card-body w-100">
+          <div id="loadingSpinner" class="spinner-border text-primary mb-3" role="status">
+            <span class="visually-hidden"></span>
+          </div>
+          <h5 id="awaitingMessage" class="fs-4 text-muted">Awaiting Analysis</h5>
+          <div id="yogaCardsContainer">
+            <!-- The Bootstrap cards will be injected here -->
+          </div>
+          <p id="placeholderMessage" class="text-muted fs-6">Your yoga recommendations will appear here soon!</p>
+        </div>
+      </div>
+    </div>
+    
+
+  
+  </div>
+  
+  <!-- Yoga Pose Search Form and Pose Image --><br>
+<div class="row">
+
+  <!-- Pose Search Form Card -->
+  <div class="col-md-4 mb-4">
+    <div class="card shadow-lg h-100 d-flex flex-column">
+      <div class="card-header bg-secondary text-white">
+        <h4 class="mb-0">Search for a Yoga Pose</h4>
+      </div>
+      <div class="card-body flex-grow-1 d-flex flex-column justify-content-between">
+        <form id="poseSearchForm" action="/yogas/generateImg" method="GET">
+          <div class="mb-4">
+            <label for="poseSearchInput" class="form-label fs-5">Search for a Yoga Pose</label>
+            <input type="text" name="poseName" class="form-control fs-5 p-3" id="poseSearchInput" placeholder="Enter yoga pose name" required>
+          </div>
+          <button type="submit" class="btn btn-secondary  mb-4 me-2"><i class="fa-solid fa-leaf me-2"></i>Generate Image</button>
+        </form>
+        
+        <!-- Placeholder Content to Balance Card Size -->
+        <div class="text-center mt-auto">
+          <img src="/public/imgty.png" class="img-fluid mb-3" alt="Yoga Pose Placeholder">
+         
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pose Image Card -->
+  <% if (typeof imageUrl !== 'undefined' && imageUrl) { %>
+    <div class="col-md-6 mb-4">
+      <div class="card shadow-lg h-100">
+        <div class="card-body text-center d-flex flex-column justify-content-center">
+          <h4 class="fs-4 mb-4">Yoga Pose Image: <%= poseName %></h4>
+          <img id="poseImageDisplay" src="<%= imageUrl %>" class="yoga-pose-image img-fluid rounded" alt="Yoga Pose Image">
+        </div>
+      </div>
+    </div>
+  <% } else { %>
+    <div class="col-md-8 mb-1">
+      <div class="card shadow-lg border text-center d-flex align-items-center justify-content-center ">
+        <div class="card-body">
+          <div class="spinner-border text-secondary mb-3" role="status">
+            <span class="visually-hidden"></span>
+          </div>
+          <h5 class="fs-4 text-muted">Awaiting Image</h5>
+          <p class="text-muted fs-6">Your yoga pose image will appear here soon!</p>
+        </div>
+      </div>
+    </div>
+  <% } %>
+
+</div>
+</div>
+
+<div class="section-divider"></div>
+<div class="container mt-5 ">
+  <h1><i class="fa-solid fa-utensils"></i> Track Your Calories</h1>
+  <!-- Nutrition Tracker and Nutrition Chart -->
+  <div class="row">
+    <div class="col-md-4">
+      <div class="card mb-4 border">
+        <div class="card-header">
+          <h4>Nutrition Tracker</h4>
+        </div>
+        <div class="card-body">
+          <form id="nutrition-form" action="/nutrition/analyze" method="POST" class="mb-4">
+            <div class="form-group">
+              <label for="ingredients">Enter Food for Analysis</label>
+              <textarea name="ingredients" id="ingredients" class="form-control" rows="3" placeholder="e.g., 1 cup rice"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="mealType">Select Meal Type</label>
+              <select name="mealType" id="mealType" class="form-control">
+                <option value="breakfast">Breakfast</option>
+                <option value="lunch">Lunch</option>
+                <option value="dinner">Dinner</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Analyze</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card mb-4 border">
+        <div class="card-header">
+          <h4>Nutrition Intake For Today</h4>
+        </div>
+        <div class="card-body">
+          <canvas id="nutritionChart"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card mb-4 border">
+        <div class="card-header">
+          <h4>NutritionalBreakDown for Your Meal</h4>
+        </div>
+        <div class="card-body">   <canvas id="nutritionPieChart" width="400" height="400"></canvas></div>
+  
+      </div>
+   
+  
+    </div>
+  </div>
+  
+
+ 
+
+
+
+
+<script>
+  document.getElementById('problemForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const issue = document.getElementById('problemInput').value;
+    console.log(issue);
+
+    // Send AJAX request to backend
+    fetch('/yogas/sanas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ issue: issue })
+    })
+      .then(response => response.text())
+      .then(data => {
+        const responseObject = JSON.parse(data);
+        const accumulatedDelta = responseObject.accumulatedDelta;
+console.log("accumulatedData", accumulatedDelta)
+        const cleanedData = accumulatedDelta
+          .replace(/```/g, '')  // Remove any backticks
+          .trim();  // Remove leading/trailing whitespace
+
+        const parsedData = JSON.parse(cleanedData);
+        console.log(parsedData); // Check the cleaned and parsed data
+
+        // Get the container for displaying yogasanas
+        const yogaCardsContainer = document.getElementById('yogaCardsContainer');
+        yogaCardsContainer.innerHTML = ''; // Clear previous results
+
+        if (parsedData.yogasanas) {
+          // Loop through each yogasana and create a Bootstrap card
+          parsedData.yogasanas.forEach(yoga => {
+            const cardHTML = `
+              <div class="col-md-8 mb-4">
+                <div class="card shadow">
+                  <div class="card-header">
+                    <h5 class="card-title">${yoga.name}</h5>
+                  </div>
+                  <div class="card-body">
+                    <h6><i class="fas fa-heart"></i> Benefits:</h6>
+                    <ul>
+                      ${yoga.benefits.map(benefit => `<li>${benefit}</li>`).join('')}
+                    </ul>
+                    <h6><i class="fas fa-dumbbell"></i> Instructions:</h6>
+                    <p>${yoga.instructions}</p>
+                  </div>
+                </div>
+              </div>
+            `;
+
+            const loadingSpinner = document.getElementById("loadingSpinner");
+  const awaitingMessage = document.getElementById("awaitingMessage");
+  const placeholderMessage = document.getElementById("placeholderMessage");
+  // Append the card to the container
+  yogaCardsContainer.innerHTML += cardHTML;
+  // Hide loading elements
+  loadingSpinner.style.display = "none";
+  awaitingMessage.style.display = "none";
+  placeholderMessage.style.display = "none";
+          
+          });
+
+          // Display the yoga cards
+          yogaCardsContainer.style.display = 'flex';
+          yogaCardsContainer.style.flexWrap = 'wrap';
+        } else {
+          yogaCardsContainer.innerHTML = '<p class="text-center">No yogasanas found. Please try a different health issue.</p>';
+          yogaCardsContainer.style.display = 'block';
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('yogaCardsContainer').innerHTML = '<p class="text-center text-danger">An error occurred while fetching yogasanas. Please try again later.</p>';
+        document.getElementById('yogaCardsContainer').style.display = 'block';
+      });
+  });
+</script>
+
+
+
+
+
+
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2"></script>
+
+<script>
+  // Assume maintenanceCal is the maintenance calories value to highlight
+  const maintenanceCal = 2000; // Example value
+
+  const ctx = document.getElementById('nutritionChart').getContext('2d');
+  let nutritionChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Calories', 'Fat', 'Protein', 'Carbs'],
+      datasets: [{
+        label: 'Nutrition Breakdown',
+        data: [0, 0, 0, 0], // Initial empty data
+        backgroundColor: [
+          'rgba(60, 179, 113, 0.6)',  // green
+          'rgba(255, 99, 132, 0.6)',  // red
+          'rgba(54, 162, 235, 0.6)',  // blue
+          'rgba(255, 159, 64, 0.6)'   // orange
+        ],
+        borderColor: [
+          'rgba(60, 179, 113, 1)',
+          'rgba(255, 99, 132, 1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 159, 64, 1)'
+        ],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      },
+      plugins: {
+        legend: {
+          position: 'top',
+        },
+        title: {
+          display: true,
+          text: 'Nutrition Breakdown by Meal'
+        },
+        annotation: {
+          annotations: {
+            line1: {
+              type: 'line',
+              yMin: maintenanceCal,
+              yMax: maintenanceCal,
+              borderColor: 'rgba(255, 0, 0, 0.8)',
+              borderWidth: 2,
+              label: {
+                content: `Maintenance Calories: ${maintenanceCal}`,
+                enabled: true,
+                position: 'end'
+              }
+            }
+          }
+        }
+      }
+    }
+  });
+  let a=0,b=0,c=0,d=0;
+  // Handle form submission
+  document.getElementById('nutrition-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const ingredients = document.getElementById('ingredients').value;
+    const mealType = document.getElementById('mealType').value;
+
+    try {
+      // Send AJAX request to the backend
+      const response = await fetch('/nutrition/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ingredients, mealType })
+      });
+
+      const data = await response.json();
+      console.log(data);
+      a=a+data.totalCalories;
+      b+=data.totalFats;
+      c+=data.totalProtein;
+      d+=data.totalCarbs;
+
+      // Update chart data dynamically with the fetched data
+      nutritionChart.data.datasets[0].data = [
+        a,
+        b,
+        c,
+        d
+      ];
+
+      // Re-render the chart with the new data
+      nutritionChart.update();
+
+    } catch (error) {
+      console.error('Error fetching nutrition data:', error);
+    }
+  });
+</script>
+ <!-- Pie chart canvas -->
+
+ <script>
+   // Initialize the pie chart with empty data
+   const atx = document.getElementById('nutritionPieChart').getContext('2d');
+   let nutritionPieChart = new Chart(atx, {
+     type: 'pie',
+     data: {
+       labels: ['Calories', 'Fat', 'Protein', 'Carbs'],
+       datasets: [{
+         label: 'Nutrition Breakdown',
+         data: [0, 0, 0, 0], // Initial empty values
+         backgroundColor: [
+           'rgba(60, 179, 113, 0.6)',  // Green for Calories
+           'rgba(255, 99, 132, 0.6)',  // Red for Fat
+           'rgba(54, 162, 235, 0.6)',  // Blue for Protein
+           'rgba(255, 159, 64, 0.6)'   // Orange for Carbs
+         ],
+         borderColor: [
+           'rgba(60, 179, 113, 1)',
+           'rgba(255, 99, 132, 1)',
+           'rgba(54, 162, 235, 1)',
+           'rgba(255, 159, 64, 1)'
+         ],
+         borderWidth: 1
+       }]
+     },
+     options: {
+       responsive: true,
+       plugins: {
+         title: {
+           display: true,
+           text: 'Nutrition Breakdown by Meal'
+         },
+         legend: {
+           position: 'top'
+         }
+       }
+     }
+   });
+
+   // Handle form submission
+   document.getElementById('nutrition-form').addEventListener('submit', async function(e) {
+     e.preventDefault();
+
+     const ingredients = document.getElementById('ingredients').value;
+     const mealType = document.getElementById('mealType').value;
+
+     try {
+       // Send AJAX request to the backend
+       const response = await fetch('/nutrition/analyze', {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({ ingredients, mealType })
+       });
+
+       const data = await response.json();
+       console.log(data);
+
+       // Update the pie chart with the fetched data
+       nutritionPieChart.data.datasets[0].data = [
+         data.totalCalories,
+         data.totalFats,
+         data.totalProtein,
+         data.totalCarbs
+       ];
+
+       // Re-render the chart with the new data
+       nutritionPieChart.update();
+
+     } catch (error) {
+       console.error('Error fetching nutrition data:', error);
+     }
+   });
+ </script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</body>
+</html>
+
+

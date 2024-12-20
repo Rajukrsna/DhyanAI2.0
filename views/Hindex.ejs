@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FocusFlow</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <style>
+    body {
+      background: url('https://www.transparenttextures.com/patterns/black-linen.png'), linear-gradient(135deg, #eef2f3, #8e9eab);
+      font-family: 'Poppins', sans-serif;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      flex-direction: column;
+    }
+    .task-container {
+      max-width: 900px;
+      width: 100%;
+      margin: 30px auto;
+    }
+    .task-box {
+      background-color: #ffffff;
+      border: 2px solid #007bff;
+      border-radius: 10px;
+      padding: 25px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s;
+    }
+    .task-box:hover {
+      transform: translateY(-5px);
+    }
+    .btn-custom {
+      width: 100px;
+      margin: 5px;
+    }
+    .task-log {
+      background-color: #f8f9fa;
+      border: 2px solid #007bff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    .task-log h4 {
+      font-weight: bold;
+      color: #007bff;
+    }
+    .list-group-item {
+      background-color: #ffffff;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      transition: background-color 0.3s, box-shadow 0.3s;
+    }
+    .list-group-item:hover {
+      background-color: #e2e6ea;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    }
+    #timer {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #007bff;
+    }
+    .icon {
+      font-size: 1.5rem;
+      color: #28a745;
+    }
+    .notification-text {
+      font-size: 1.2rem;
+      font-weight: 500;
+
+    }
+    /* Button in the right corner */
+   
+  
+  </style>
+</head>
+<body>
+  <div class="container task-container">
+    <div class="row">
+      
+      <!-- Task Timer Section -->
+      <div class="col-md-6 mb-4">
+        <div class="task-box">
+          <h3 class="mb-4">Start a New Task</h3>
+          <div class="mb-4">
+            <input type="text" id="taskName" class="form-control mb-3" placeholder="Enter Task Name">
+            <input type="number" id="taskDuration" class="form-control mb-3" placeholder="Enter Task Duration (minutes)" min="1">
+            <div class="d-flex justify-content-between">
+              <button class="btn btn-primary btn-custom" id="startBtn">Start</button>
+              <button class="btn btn-danger btn-custom" id="endBtn" disabled>End</button>
+              <button class="btn btn-secondary btn-custom" id="resetBtn">Reset</button>
+            </div>
+          </div>
+          <h3 id="timer" class="text-center">0:00</h3>
+          <div class="mt-4 text-center">
+            <p id="notification" class="text-info notification-text"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Task Log Section -->
+      <div class="col-md-6 mb-4">
+        <div class="task-log">
+          <h4 class="mb-4">
+            <i class="fas fa-tasks mr-2"></i> Task Log
+          </h4>
+          <ul id="taskList" class="list-group">
+            <!-- Sample task item -->
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Task: Example Task | Duration: 15m
+              <i class="fas fa-check-circle icon"></i>
+            </li>
+          </ul>
+        </div>
+      </div>
+          <!-- Button to show modal -->
+   <button class="btn btn-primary show-tasks-btn" id="mod-button" data-toggle="modal" data-target="#taskModal">
+    Show Tasks
+  </button>
+    </div>
+
+  </div>
+   
+  <div class="modal fade" id="taskModal" tabindex="-1" aria-labelledby="taskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="taskModalLabel">Tasks Completed</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div id="taskCards">
+            <!-- Tasks will be dynamically added here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let timer;
+    let taskStartTime;
+    const startBtn = document.getElementById('startBtn');
+    const endBtn = document.getElementById('endBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const timerDisplay = document.getElementById('timer');
+    const taskNameInput = document.getElementById('taskName');
+    const taskDurationInput = document.getElementById('taskDuration');
+    const taskList = document.getElementById('taskList');
+    const notification = document.getElementById('notification');
+    let taskName = "";
+  
+    function startTimer(duration) {
+      let start = Date.now();
+      taskStartTime = start;
+      let diff, minutes, seconds;
+  
+      function updateTimer() {
+        diff = duration - (((Date.now() - start) / 1000) | 0);
+  
+        minutes = (diff / 60) | 0;
+        seconds = (diff % 60) | 0;
+  
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+        seconds = seconds < 10 ? "0" + seconds : seconds;
+  
+        timerDisplay.textContent = minutes + ":" + seconds;
+  
+        if (diff <= 0) {
+          clearInterval(timer);
+          timerDisplay.textContent = "00:00";
+          endTask();
+        }
+      }
+  
+      updateTimer();
+      timer = setInterval(updateTimer, 1000);
+    }
+  
+    function logTask(taskName, duration) {
+      const listItem = document.createElement('li');
+      listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+      listItem.innerHTML = `Task: ${taskName} | Duration: ${duration} <i class='fas fa-check-circle icon'></i>`;
+      taskList.appendChild(listItem);
+    }
+  
+    // Function to handle ending the task
+    function endTask() {
+      clearInterval(timer);
+      const taskEndTime = Date.now();
+      const durationInSeconds = Math.floor((taskEndTime - taskStartTime) / 1000);
+      const minutes = Math.floor(durationInSeconds / 60);
+      const seconds = durationInSeconds % 60;
+      const formattedDuration = `${minutes}m ${seconds}s`;
+  
+      logTask(taskName, formattedDuration);
+      resetTimer();
+    }
+  
+    // Function to reset the timer and inputs
+    function resetTimer() {
+      clearInterval(timer);
+      timerDisplay.textContent = "0:00";
+      taskNameInput.value = "";
+      taskDurationInput.value = "";
+      startBtn.disabled = false;
+      endBtn.disabled = true;
+      notification.textContent = "";
+    }
+  
+    // Start button click event
+    startBtn.addEventListener('click', async () => {
+      taskName = taskNameInput.value.trim();
+      const duration = parseInt(taskDurationInput.value, 10);
+  
+      if (!taskName) {
+        alert("Please enter a task name.");
+        return;
+      }
+      if (isNaN(duration) || duration <= 0) {
+        alert("Please enter a valid task duration in minutes.");
+        return;
+      }
+  
+      try {
+        console.log(taskName);
+        await fetch('pomodoro/api/tasks', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ name: taskName, duration }),
+        });
+      } catch (error) {
+        console.error('Error saving task:', error);
+      }
+  
+      clearInterval(timer);
+      startTimer(duration * 60);
+      startBtn.disabled = true;
+      endBtn.disabled = false;
+      notification.textContent = `Working on: ${taskName}`;
+    });
+  
+    // End button click event
+    endBtn.addEventListener('click', endTask);
+  
+    // Reset button click event
+    resetBtn.addEventListener('click', resetTimer);
+  </script>
+
+
+  <script>
+const mButton = document.getElementById('mod-button');
+mButton.addEventListener('click', async () => {
+  console.log("fuck yiuo")
+// Fetch tasks and render them in the modal
+async function fetchTasks() {
+      const taskCardsContainer = document.getElementById('taskCards');
+console.log("sjdhfjds")
+
+  try {
+    console.log("dsjfhdskj")
+    const response = await fetch('pomodoro/api/task'); // API endpoint to fetch tasks
+    const tasks = await response.json();
+
+    const taskCardsContainer = document.getElementById('taskCards');
+    taskCardsContainer.innerHTML = ''; // Clear existing cards
+
+    
+    // Check if tasks is an array and has at least one element
+    if (tasks.length > 0 && tasks[0].activities && tasks[0].activities.length > 0) {
+     // Group activities under a single card
+     const activities = tasks[0].activities;
+        let activitiesHTML = ''; // Holds the HTML for all activities for a single date
+
+        activities.forEach(activity => {
+          activitiesHTML += `
+            <div class="activity">
+              <h5 class="card-title">${activity.name}</h5>
+              <p class="card-text">Duration: ${activity.duration} minutes</p>
+            </div>
+          `;
+        });
+
+        // Create the card for the date
+        const card = document.createElement('div');
+        card.classList.add('col');
+        card.innerHTML = `
+          <div class="card border-secondary mb-3">
+            <div class="card-header">
+              Date: ${new Date(tasks[0].date).toLocaleDateString()}
+            </div>
+            <div class="card-body">
+              ${activitiesHTML}
+            </div>
+          </div>
+        `;
+
+        taskCardsContainer.appendChild(card);
+    } else {
+      taskCardsContainer.innerHTML = '<p>No activities found for today.</p>';
+    }
+
+
+  } catch (error) {
+    console.error('Error fetching tasks:', error);
+    taskCardsContainer.innerHTML = '<p>Error fetching tasks. Please try again later.</p>';
+  }
+
+
+    }
+
+    document.getElementById('taskModal').addEventListener('shown.bs.modal', function() {
+  console.log('Modal is shown');
+  fetchTasks();
+});
+fetchTasks()
+
+    })    
+
+  </script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+</body>
+</html>

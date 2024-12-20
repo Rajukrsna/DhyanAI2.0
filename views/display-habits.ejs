@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Habit Tracker</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<style>
+  body {
+            background: url('https://www.transparenttextures.com/patterns/black-linen.png'), linear-gradient(135deg, #eef2f3, #8e9eab);
+            font-family: 'Poppins', sans-serif;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+</style>
+<body>
+  <div class="container my-5">
+    <!-- Habit Table Card -->
+
+    <div class="row">
+
+  <div class="col md-5">
+
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h4>Your Habits</h4>
+        <input type="date" class="form-control w-25">
+      </div>
+      <div class="card-body">
+        <div class="table-responsive animate__animated animate__zoomIn">
+          <table class="table table-hover table-bordered align-middle text-center habit-table">
+            <thead class="table-dark">
+              <tr>
+                <th>Habit Name</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (habits != null && habits.length > 0) { %>
+                <% habits.forEach(habit => { %>
+                  <tr id="habit-row-<%= habit._id %>">
+                    <td class="fw-bold habit-name"><%= habit.habitName %></td>
+                    <td>
+                      <span id="status-<%= habit._id %>" class="badge <%= habit.completedDates.some(date => new Date(date).toISOString().split('T')[0] === new Date().toISOString().split('T')[0]) ? 'bg-success' : 'bg-warning text-dark' %>">
+                        <%= habit.completedDates.some(date => new Date(date).toISOString().split('T')[0] === new Date().toISOString().split('T')[0]) ? "Completed" : "Not Completed" %>
+                      </span>
+                    </td>
+                    <td>
+                      <i id="toggle-icon-<%= habit._id %>" 
+                        class="fa-regular <%= habit.completedDates.some(date => new Date(date).toISOString().split('T')[0] === new Date().toISOString().split('T')[0]) ? 'fa-circle-check text-success' : 'fa-circle-xmark text-danger' %> fa-lg"
+                        style="cursor: pointer;"
+                        onclick="toggleHabitStatus('<%= habit._id %>')">
+                     </i>
+                     <i id="toggle-icon2-<%= habit._id %>"
+                      class="fa-regular fa-trash-can"
+                     onclick ="deleteHabit('<%= habit._id%>')"
+                     >
+
+                     </i>
+                    
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="3" class="text-center fw-bold text-muted">Yet to add habit</td>
+                </tr>
+              <% } %>
+            </tbody>
+            
+            
+          </table>
+        </div>
+        <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#addHabitModal">+ Add Habit</button>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="col md-4">
+    <!-- Success/Failure Pie Chart Card -->
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h4>Habit Success vs. Failure</h4>
+        <select class="form-select w-25">
+          <option>Select Habit</option>
+          <% habits.forEach(habit => { %>
+            <option><%= habit.habitName %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="card-body">
+        <canvas id="pieChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+  
+
+
+    <div class="col md-4">
+    <div class="card mb-4">
+      <div class="card-header">
+        <h4>Habit Streaks by Month</h4>
+        
+      </div>
+      <div class="card-body">
+        <canvas id="barChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+
+
+</div>
+  <!-- Add Habit Modal -->
+  <div class="modal fade" id="addHabitModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form action="habits/habits/add" method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title">Add New Habit</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="text" name="habitName" class="form-control" placeholder="Enter Habit Name" required>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-success">Add Habit</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    const habits = <%- JSON.stringify(habits) %>;
+  
+    function updatePieChart(habitName) {
+      const selectedHabit = habits.find(h => h.habitName === habitName);
+  
+      if (selectedHabit) {
+        const completedCount = selectedHabit.completedDates.length;
+        const notCompletedCount = selectedHabit.notCompletedDates.length;
+  
+        const ctxPie = document.getElementById('pieChart').getContext('2d');
+        
+        if (window.myPieChart) {
+          window.myPieChart.destroy(); // Destroy existing chart before creating a new one
+        }
+  
+        window.myPieChart = new Chart(ctxPie, {
+          type: 'pie',
+          data: {
+            labels: ['Completed', 'Not Completed'],
+            datasets: [{
+              data: [completedCount, notCompletedCount],
+              backgroundColor: ['#28a745', '#ffc107']
+            }]
+          }
+        });
+      }
+    }
+
+
+    let barChartInstance;
+
+    function getPreviousMonths() {
+  const months = [];
+  const now = new Date();
+  for (let i = 0; i < 4; i++) {
+    const month = new Date(now.getFullYear(), now.getMonth() - i);
+    months.push(month.toLocaleString('default', { month: 'short' }));
+  }
+  return months.reverse();
+}
+
+function updateBarChart(habitName) {
+  const selectedHabit = habits.find(h => h.habitName === habitName);
+
+  // Get the previous 4 months
+  const previousMonths = getPreviousMonths();
+
+  if (selectedHabit) {
+    const monthlyData = selectedHabit.monthlyFollowed || {};
+
+    // Create an array of data for each of the 4 months, using 0 if no data is available
+    const counts = previousMonths.map(month => monthlyData[month] || 0);
+
+    const ctxBar = document.getElementById('barChart').getContext('2d');
+
+    if (barChartInstance) {
+      barChartInstance.destroy();
+    }
+
+    barChartInstance = new Chart(ctxBar, {
+      type: 'bar',
+      data: {
+        labels: previousMonths,
+        datasets: [{
+          label: `Times Followed in ${habitName}`,
+          data: counts,
+          backgroundColor: '#007bff'
+        }]
+      },
+      options: {
+        scales: {
+          y: {
+            ticks: {
+              stepSize: 1, // Ensures the y-axis shows integers like 1, 2, 3, etc.
+              beginAtZero: true // Optionally starts the scale from 0
+            }
+          }
+        }
+      }
+    });
+  }
+}
+
+  
+    document.querySelector('.form-select').addEventListener('change', (event) => {
+      updatePieChart(event.target.value);
+      updateBarChart(event.target.value)
+    });
+
+
+    function getPreviousMonths() {
+  const months = [];
+  const now = new Date();
+  for (let i = 0; i < 4; i++) {
+    const month = new Date(now.getFullYear(), now.getMonth() - i);
+    months.unshift(month.toLocaleString('default', { month: 'long' })); // unshift adds to the start of the array
+  }
+  return months; // No need to reverse as months are added in correct order now
+}
+
+  </script>
+
+    <script>
+  async function toggleHabitStatus(habitId) {
+    try {
+      const response = await fetch(`habits/habits/toggle/${habitId}`, {
+        method: 'POST'
+      });
+
+      if (response.ok) {
+        // Update the icon and status dynamically
+        const icon = document.getElementById(`toggle-icon-${habitId}`);
+        const statusBadge = document.getElementById(`status-${habitId}`);
+
+        if (icon.classList.contains('fa-circle-check')) {
+          // Change to "Not Completed" state
+          icon.classList.remove('fa-circle-check', 'text-success');
+          icon.classList.add('fa-circle-xmark', 'text-danger');
+          statusBadge.classList.remove('bg-success');
+          statusBadge.classList.add('bg-warning', 'text-dark');
+          statusBadge.textContent = 'Not Completed';
+        } else {
+          // Change to "Completed" state
+          icon.classList.remove('fa-circle-xmark', 'text-danger');
+          icon.classList.add('fa-circle-check', 'text-success');
+          statusBadge.classList.remove('bg-warning', 'text-dark');
+          statusBadge.classList.add('bg-success');
+          statusBadge.textContent = 'Completed';
+        }
+      } else {
+        console.error('Failed to toggle habit status');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+</script>
+
+<script>
+  async function deleteHabit(habitt)
+  {
+try{
+  const response = await fetch(`/habits/habits/delete/${habitt}`,{
+    method: 'POST',
+})
+if(response.ok)
+{
+const row= document.getElementById(`habit-row-${habitt}`)
+row.remove();
+}
+
+}
+catch(error)
+{
+  console.error('Error:' ,error);
+}
+  }
+</script>
+  
+</body>
+</html>
