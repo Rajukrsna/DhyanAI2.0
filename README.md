@@ -19,6 +19,9 @@
 - Get personalized **health recipes** by entering the ingredients you have.
 - Uses **Meta LLM** on SambaNova AI Cloud Services to provide accurate and healthy meal suggestions.
 
+- ### 🥗 Food Items and Packets Analysis Chatbot
+- User can upload their Food packets and chat with AI about its nutrient consumption and credibility.
+- 
 ### ⏱️ Pomodoro Timer
 - Boost productivity with the **Pomodoro Technique**.
 - Manage and track your activities effectively by dividing your time into focused work sessions and breaks.
